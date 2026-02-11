@@ -64,6 +64,40 @@ PostFrameBuilder(
 )
 ```
 
+### initState-like behavior in StatelessWidget
+
+Use `PostFrameBuilder` to execute one-time initialization logic in a `StatelessWidget`, similar to `initState` in `StatefulWidget`:
+
+```dart
+import 'package:flutter_post_frame/post_frame_builder.dart';
+
+class MyStatelessWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return PostFrameBuilder(
+      onAfterBuildFrame: (context, size) {
+        // This runs once after the first frame - like initState!
+        // Perfect for:
+        // - Showing a dialog or snackbar
+        // - Triggering navigation
+        // - Fetching data based on widget size
+        // - Starting animations
+        print('Widget initialized with size: $size');
+      },
+      child: YourContentWidget(),
+    );
+  }
+}
+```
+
+This is especially useful when you want to keep your widget stateless but still need to perform post-build operations.
+
+## Supported Platforms
+
+| Android | iOS | Linux | macOS | Web | Windows |
+|:-------:|:---:|:-----:|:-----:|:---:|:-------:|
+|    ✅    |  ✅  |   ✅   |   ✅   |  ✅  |    ✅    |
+
 ## Additional information
 
 This package uses `WidgetsBinding.instance.endOfFrame` to ensure callbacks are executed after the widget tree has been fully rendered. This is particularly useful when you need to:
@@ -71,6 +105,13 @@ This package uses `WidgetsBinding.instance.endOfFrame` to ensure callbacks are e
 - Get the actual rendered size of a widget
 - Perform navigation or show dialogs after the initial build
 - Execute animations or scroll operations that depend on layout completion
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+- [Repository](https://github.com/sujithsdeveloper/flutter_post_frame)
+- [Issue Tracker](https://github.com/sujithsdeveloper/flutter_post_frame/issues)
 
 ## License
 
