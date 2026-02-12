@@ -1,6 +1,6 @@
 name: flutter_post_frame
 description: "A lightweight Flutter package that provides utilities to execute callbacks after the first frame is rendered. Perfect for getting widget sizes or performing post-build operations."
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/sujithsdeveloper/flutter_post_frame
 repository: https://github.com/sujithsdeveloper/flutter_post_frame.git
 issue_tracker: https://github.com/sujithsdeveloper/flutter_post_frame/issues

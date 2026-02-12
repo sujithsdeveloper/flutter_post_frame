@@ -1,8 +1,6 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_post_frame/flutter_post_frame.dart';
-import 'package:flutter_post_frame/post_frame_builder.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,6 +48,20 @@ class HomePage extends StatelessWidget {
           ),
           SizedBox(height: 8),
           MixinExample(),
+          SizedBox(height: 32),
+          Text(
+            'Multiple ScrollControllers Example',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          MultipleScrollControllersExample(),
+          SizedBox(height: 32),
+          Text(
+            'ScrollMixin Example',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          ScrollMixinExample(),
         ],
       ),
     );
@@ -139,6 +151,202 @@ class _MixinExampleState extends State<MixinExample>
           const Text(
             'This widget uses FlutterPostFrameMixin.\n'
             'The mixin overrides onAfterBuildFrame.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Example 3: Using PostFrameScrollBuilder to manage multiple ScrollControllers
+/// Perfect for coordinating multiple scrollable areas!
+class MultipleScrollControllersExample extends StatelessWidget {
+  const MultipleScrollControllersExample({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 300,
+      child: PostFrameScrollBuilder(
+        controllerKeys: const ['list1', 'list2'],
+        onAfterBuildFrame: (data) {
+          debugPrint('PostFrameScrollBuilder - Widget size: ${data.size}');
+          debugPrint(
+            'Controllers created: ${data.scrollManager.keys.toList()}',
+          );
+        },
+        onScroll: (key, offset) {
+          debugPrint('Scroll on $key: $offset');
+        },
+        builder: (context, scrollManager) {
+          return Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Two synchronized lists with scroll tracking:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Flexible(
+                      child: ElevatedButton(
+                        onPressed: () => scrollManager.scrollToTop('list1'),
+                        child: const Text('List 1 Top'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: ElevatedButton(
+                        onPressed: () => scrollManager.scrollToBottom('list1'),
+                        child: const Text('List 1 Bottom'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: ElevatedButton(
+                        onPressed: () => scrollManager.scrollToTop('list2'),
+                        child: const Text('List 2 Top'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.orange),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: ListView.builder(
+                            controller: scrollManager['list1'],
+                            itemCount: 20,
+                            itemBuilder: (context, index) => ListTile(
+                              dense: true,
+                              title: Text('List 1 - Item $index'),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.deepOrange),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: ListView.builder(
+                            controller: scrollManager['list2'],
+                            itemCount: 20,
+                            itemBuilder: (context, index) => ListTile(
+                              dense: true,
+                              title: Text('List 2 - Item $index'),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Example 4: Using FlutterPostFrameScrollMixin for full control
+class ScrollMixinExample extends StatefulWidget {
+  const ScrollMixinExample({super.key});
+
+  @override
+  State<ScrollMixinExample> createState() => _ScrollMixinExampleState();
+}
+
+class _ScrollMixinExampleState extends State<ScrollMixinExample>
+    with FlutterPostFrameScrollMixin<ScrollMixinExample> {
+  String _status = 'Waiting for first frame...';
+  double _scrollOffset = 0;
+
+  @override
+  List<String> get scrollControllerKeys => ['mainScroll'];
+
+  @override
+  FutureOr<void> onAfterBuildFrameWithScroll(PostFrameScrollData data) {
+    setState(() {
+      _status = 'Ready! Size: ${data.size}';
+    });
+
+    // Add scroll listener after build
+    scrollManager.addScrollListener('mainScroll', () {
+      final offset = scrollManager.getScrollOffset('mainScroll');
+      if (offset != null && mounted) {
+        setState(() => _scrollOffset = offset);
+      }
+    });
+
+    debugPrint('FlutterPostFrameScrollMixin - Widget size: ${data.size}');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.purple.shade100,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Status: $_status'),
+          Text('Scroll offset: ${_scrollOffset.toStringAsFixed(1)}'),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: () => scrollManager.scrollToTop('mainScroll'),
+                child: const Text('Scroll Top'),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () => scrollManager.animateTo(
+                  'mainScroll',
+                  100,
+                  duration: const Duration(milliseconds: 500),
+                ),
+                child: const Text('Scroll to 100'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.purple),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: ListView.builder(
+                controller: scrollManager['mainScroll'],
+                itemCount: 30,
+                itemBuilder: (context, index) => ListTile(
+                  dense: true,
+                  title: Text('Mixin Example - Item $index'),
+                ),
+              ),
+            ),
           ),
         ],
       ),
